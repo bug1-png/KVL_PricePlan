@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>KAVALON Floor Plan &amp; Price</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f1626;--panel:#161f35;--panel2:#1d2845;--line:#2b3859;--text:#eef2fb;--mute:#9aa8c7;
+  --brand:#3f6df0;--ok:#19b36b;--sold:#e5484d;--lock:#8a94a8;--pend:#f0a020;--gold:#ffd24a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:'Noto Sans Thai','Sarabun','Leelawadee UI',Tahoma,sans-serif;overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer}
+#app{display:flex;flex-direction:column;height:100%}
+header{display:flex;align-items:center;gap:14px;padding:8px 14px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.brand{font-weight:700;letter-spacing:.35em;font-size:20px;color:#fff;padding-right:6px}
+.brand small{display:block;letter-spacing:.05em;font-size:10px;color:var(--mute);font-weight:500;margin-top:-2px}
+.tabs{display:flex;gap:4px}
+.tab{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 14px;font-weight:600;min-width:56px}
+.tab small{display:block;font-size:10px;font-weight:500;color:var(--mute)}
+.tab.on{background:var(--brand);border-color:var(--brand)}
+.tab.on small{color:#dfe7ff}
+.spacer{flex:1}
+#filtBtn{display:none}
+.stats{display:flex;gap:14px;font-size:13px;color:var(--mute)}
+.stats b{color:var(--text);font-size:15px}
+.stats .g b{color:var(--ok)}.stats .r b{color:var(--sold)}
+.bar2{display:flex;align-items:center;gap:10px;padding:7px 14px;background:#121a2e;border-bottom:1px solid var(--line);flex-wrap:wrap;font-size:13px}
+.chips{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.chip{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:3px 11px;font-size:13px;color:var(--mute)}
+.chip.on{color:#fff;border-color:var(--brand);background:#243a78}
+.lab{color:var(--mute);font-size:12px}
+input[type=text],input[type=number],select{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:5px 9px;font:inherit;font-size:13px}
+input[type=text]{width:120px}input[type=number]{width:92px}
+.tog{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none}
+.sep{width:1px;height:22px;background:var(--line)}
+#main{flex:1;display:flex;min-height:0;position:relative}
+#view{flex:1;position:relative;overflow:hidden;background:#fff;touch-action:none;cursor:grab}
+#view.drag{cursor:grabbing}
+#stage{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+#stage img{display:block;user-select:none;-webkit-user-drag:none;pointer-events:none}
+#ov{position:absolute;left:0;top:0}
+.u rect.hit{fill:transparent;stroke:none;cursor:pointer}
+.u:hover rect.hit{fill:rgba(63,109,240,.22);stroke:#3f6df0;stroke-width:3}
+.u.av rect.hit{stroke:rgba(25,179,107,.85);stroke-width:2.5}
+.u.sel rect.hit{fill:rgba(255,210,74,.28);stroke:var(--gold);stroke-width:6}
+.u.dim{opacity:.18}
+.u .x{stroke-linecap:round;fill:none}
+.u.s .shade{fill:rgba(20,24,36,.30)}
+.pill rect{rx:6}
+.pill text{font-weight:700;text-anchor:middle;dominant-baseline:central;font-family:'Noto Sans Thai',Tahoma,sans-serif;pointer-events:none}
+#hint{position:absolute;left:12px;bottom:12px;background:rgba(15,22,38,.88);padding:8px 12px;border-radius:10px;font-size:12px;color:var(--mute);pointer-events:none}
+#zoomctl{position:absolute;left:12px;top:12px;display:flex;flex-direction:column;gap:6px}
+#zoomctl button{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:rgba(22,31,53,.92);font-size:20px;font-weight:600}
+#legend{position:absolute;right:12px;top:12px;background:rgba(15,22,38,.92);padding:9px 12px;border-radius:10px;font-size:12px;line-height:1.9}
+#legend i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:6px}
+#drawer{width:400px;max-width:100%;background:var(--panel);border-left:1px solid var(--line);overflow:auto;transition:margin .2s;flex:none}
+#drawer.hide{margin-right:-400px}
+.dhead{padding:16px 18px 12px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel);z-index:2}
+.dhead .code{font-size:30px;font-weight:700;line-height:1}
+.dhead .sub{color:var(--mute);font-size:13px;margin-top:4px}
+.close{position:absolute;right:12px;top:12px;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--panel2)}
+.badge{display:inline-block;padding:3px 11px;border-radius:999px;font-size:12px;font-weight:600;margin-top:8px}
+.b-ok{background:rgba(25,179,107,.18);color:#4be09b}.b-sold{background:rgba(229,72,77,.2);color:#ff8a8d}.b-lock{background:rgba(138,148,168,.22);color:#c4cbda}.b-pend{background:rgba(240,160,32,.2);color:#ffc460}
+.sec{padding:14px 18px;border-bottom:1px solid var(--line)}
+.sec h4{margin:0 0 9px;font-size:12px;letter-spacing:.06em;color:var(--mute);font-weight:600;text-transform:uppercase}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.kv{background:var(--panel2);border-radius:10px;padding:8px 11px}
+.kv span{display:block;font-size:11px;color:var(--mute)}.kv b{font-size:15px;font-weight:600}
+.bigprice{background:linear-gradient(135deg,#223a82,#2c52c9);border-radius:14px;padding:14px 16px}
+.bigprice span{font-size:12px;opacity:.85}
+.bigprice b{display:block;font-size:30px;line-height:1.2}
+.bigprice small{opacity:.8;font-size:12px}
+.row{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px dashed var(--line);font-size:14px;gap:10px}
+.row:last-child{border:0}
+.row em{font-style:normal;color:var(--mute);font-size:12px;display:block}
+.row b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.row.tot{font-weight:700}
+.net{background:linear-gradient(135deg,#0f6b46,#19b36b);border-radius:14px;padding:14px 16px;margin-top:10px}
+.net span{font-size:12px;opacity:.9}.net b{display:block;font-size:30px;line-height:1.2}.net small{opacity:.9;font-size:12px}
+.free{margin-top:10px;background:rgba(255,210,74,.12);border:1px solid rgba(255,210,74,.4);border-radius:12px;padding:10px 12px;font-size:14px}
+.btns{display:flex;gap:8px;padding:14px 18px}
+.btn{flex:1;background:var(--brand);border:0;border-radius:10px;padding:10px;font-weight:600}
+.btn.alt{background:var(--panel2);border:1px solid var(--line)}
+.xnote{margin-top:8px;font-size:12px;color:var(--mute)}
+body.present .stats .r,body.present .nopresent{display:none}
+body.present .tag-internal{display:none}
+#toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:#222c49;border:1px solid var(--line);padding:9px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:50}
+#toast.on{opacity:1}
+@media(max-width:820px){
+  header{gap:6px;padding:6px 8px}.brand{font-size:15px}.brand small{display:none}.tab{padding:4px 9px;min-width:40px;font-size:15px}.tab small{font-size:9px}
+  .bar2{display:none;padding:6px 8px}.bar2.open{display:flex}#filtBtn{display:inline-block}
+  #stats{display:none}
+  #drawer{position:absolute;right:0;left:0;bottom:0;top:auto;width:100%;max-height:52%;border-left:0;border-top:1px solid var(--line);border-radius:18px 18px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.5);margin:0;transition:transform .2s;z-index:10}
+  #drawer.hide{margin:0;transform:translateY(105%)}
+  .stats{display:none}
+  #legend{display:none}
+  #hint{display:none}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand">KAVALON<small>Floor Plan &amp; Price · ผังชั้นและราคา</small></div>
+    <div class="tabs" id="tabs"></div>
+    <div class="spacer"></div>
+    <div class="stats" id="stats"></div>
+    <button class="chip" id="filtBtn">ตัวกรอง</button>
+    <button class="chip" id="presentBtn" title="ซ่อนข้อมูลภายใน เหมาะสำหรับเปิดให้ลูกค้าดู">โหมดพรีเซนต์</button>
+    <button class="chip" id="fsBtn">เต็มจอ</button>
+  </header>
+  <div class="bar2">
+    <span class="lab">อาคาร</span>
+    <div class="chips" id="bchips"></div>
+    <div class="sep"></div>
+    <input type="text" id="q" placeholder="ค้นหาเลขห้อง เช่น B0305" autocomplete="off">
+    <select id="typeSel"><option value="">ทุกแบบห้อง</option></select>
+    <span class="lab">ราคา (ล้าน)</span>
+    <input type="number" id="pmin" placeholder="ต่ำสุด" step="0.1" min="0"><span class="lab">–</span><input type="number" id="pmax" placeholder="สูงสุด" step="0.1" min="0">
+    <label class="tog"><input type="checkbox" id="onlyAv"> เฉพาะห้องว่าง</label>
+    <label class="tog"><input type="checkbox" id="showNet"> แสดงราคาสุทธิหลังหักโปร</label>
+  </div>
+  <div id="main">
+    <div id="view">
+      <div id="stage"><img id="img" alt="floor plan"><svg id="ov"></svg></div>
+      <div id="zoomctl"><button id="zin">+</button><button id="zout">−</button><button id="zfit" title="ดูทั้งชั้น" style="font-size:13px">ทั้งชั้น</button></div>
+      <div id="legend">
+        <div><i style="background:var(--ok)"></i>แปลงว่าง</div>
+        <div><i style="background:var(--sold)"></i>ขายแล้ว / ไม่ว่าง (กากบาท)</div>
+        <div class="nopresent"><i style="background:var(--lock)"></i>LOCK / ห้ามขาย</div>
+        <div class="nopresent"><i style="background:var(--pend)"></i>รอยกเลิก</div>
+      </div>
+      <div id="hint">ลากเพื่อเลื่อน · ล้อเมาส์/บีบนิ้วเพื่อซูม · คลิกห้องเพื่อดูโปรโมชั่น · กด 1–8 เปลี่ยนชั้น</div>
+    </div>
+    <aside id="drawer" class="hide"></aside>
+    <div id="editbar" style="display:none;position:absolute;left:60px;top:12px;background:#3a2a00;border:1px solid #ffd24a;border-radius:10px;padding:8px 12px;font-size:12px;z-index:20">
+      <b>โหมดแก้กรอบ</b> คลิกห้อง → ลากกรอบเหลืองเพื่อย้าย / ลากมุมเพื่อปรับขนาด
+      <button class="chip" id="exFix">คัดลอกการแก้ไขทั้งหมด</button> <button class="chip" id="rsFix">รีเซ็ตห้องนี้</button>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+<script src="data.js"></script>
+<script src="fixes.js"></script>
+<script>
+(function(){
+const D=window.KAV, W=D.w, H=D.h;
+let LS={};try{LS=JSON.parse(localStorage.getItem('kav_fix')||'{}')}catch(e){}
+const FIX=Object.assign({},window.KAV_FIX||{},LS);
+D.units.forEach(u=>{const f=FIX[u.f+':'+u.c];if(f)u.r=f.slice()});
+const EDIT=/[?&]edit/.test(location.search);
+const $=s=>document.querySelector(s);
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+const M=n=>(n/1e6).toFixed(2)+'M';
+const TOWERS=['A','B','C','D','E','F','G','H','I'];
+const FLN=['','ชั้น 1','ชั้น 2','ชั้น 3','ชั้น 4','ชั้น 5','ชั้น 6','ชั้น 7','ชั้น 8'];
+const byFloor={};D.units.forEach(u=>{(byFloor[u.f]=byFloor[u.f]||[]).push(u)});
+const types=[...new Set(D.units.map(u=>u.type))].sort();
+const st={floor:1,tower:'',sel:null,q:'',type:'',pmin:null,pmax:null,onlyAv:false,net:false,present:false};
+const cls=u=>u.avail?'ok':/SOLD/i.test(u.status)?'sold':/ยกเลิก/.test(u.status)?'pend':'lock';
+const statusLabel=u=>st.present&&!u.avail?'ไม่ว่าง':(u.status||'-');
+const COL={ok:'#19b36b',sold:'#e5484d',pend:'#f0a020',lock:'#7d879b'};
+const dateTH=s=>{if(typeof s!=='number')return s||'';const d=new Date(Date.UTC(1899,11,30)+s*864e5);return d.getUTCDate()+'/'+(d.getUTCMonth()+1)+'/'+(d.getUTCFullYear()+543)};
+// ---------- UI build
+const tabs=$('#tabs');
+for(let f=1;f<=8;f++){const b=document.createElement('button');b.className='tab';b.dataset.f=f;b.innerHTML=`${f}<small>${(byFloor[f]||[]).filter(u=>u.avail).length} ว่าง</small>`;b.onclick=()=>setFloor(f);tabs.appendChild(b)}
+const typeSel=$('#typeSel');types.forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=t;typeSel.appendChild(o)});
+// ---------- pan / zoom
+const view=$('#view'),stage=$('#stage'),img=$('#img'),ov=$('#ov');
+img.width=W;img.height=H;ov.setAttribute('width',W);ov.setAttribute('height',H);ov.setAttribute('viewBox',`0 0 ${W} ${H}`);
+let k=.2,tx=0,ty=0,minK=.1;
+const apply=()=>{stage.style.transform=`translate(${tx}px,${ty}px) scale(${k})`};
+function fitRect(x,y,w,h,pad=40,animate=true){
+  const vw=view.clientWidth,vh=view.clientHeight;
+  const nk=Math.min((vw-pad*2)/w,(vh-pad*2)/h);
+  const nk2=Math.min(Math.max(nk,minK),3);
+  const ntx=vw/2-(x+w/2)*nk2,nty=vh/2-(y+h/2)*nk2;
+  if(animate){stage.style.transition='transform .35s ease';setTimeout(()=>stage.style.transition='',380)}
+  k=nk2;tx=ntx;ty=nty;apply();
+}
+function fitAll(){const vw=view.clientWidth,vh=view.clientHeight;minK=Math.min(vw/W,vh/H)*.9;fitRect(0,0,W,H,10)}
+function zoomAt(f,cx,cy){const nk=Math.min(Math.max(k*f,minK),3);const r=nk/k;tx=cx-(cx-tx)*r;ty=cy-(cy-ty)*r;k=nk;apply()}
+view.addEventListener('wheel',e=>{e.preventDefault();const r=view.getBoundingClientRect();zoomAt(Math.exp(-e.deltaY*.0015),e.clientX-r.left,e.clientY-r.top)},{passive:false});
+const ptrs=new Map();let drag=null,pinch=null,moved=0;
+view.addEventListener('pointerdown',e=>{ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});moved=0;
+  if(ptrs.size===1){drag={x:e.clientX,y:e.clientY,tx,ty}}
+  if(ptrs.size===2){const [a,b]=[...ptrs.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y),k};drag=null}});
+view.addEventListener('pointermove',e=>{if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(ptrs.size===2&&pinch){const [a,b]=[...ptrs.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);const r=view.getBoundingClientRect();const cx=(a.x+b.x)/2-r.left,cy=(a.y+b.y)/2-r.top;zoomAt(pinch.k*d/pinch.d/k,cx,cy);moved=99;return}
+  if(drag){const dx=e.clientX-drag.x,dy=e.clientY-drag.y;moved=Math.max(moved,Math.hypot(dx,dy));if(moved>5){view.classList.add('drag');tx=drag.tx+dx;ty=drag.ty+dy;apply()}}});
+const up=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch=null;if(!ptrs.size){drag=null;view.classList.remove('drag')}else if(ptrs.size===1){const p=[...ptrs.values()][0];drag={x:p.x,y:p.y,tx,ty}}};
+view.addEventListener('pointerup',up);view.addEventListener('pointercancel',up);
+$('#zin').onclick=()=>zoomAt(1.5,view.clientWidth/2,view.clientHeight/2);
+$('#zout').onclick=()=>zoomAt(1/1.5,view.clientWidth/2,view.clientHeight/2);
+$('#zfit').onclick=()=>{setTower('')};
+window.addEventListener('resize',()=>{if(!st.tower)fitAll()});
+// ---------- render overlay
+const NS='http://www.w3.org/2000/svg';
+function match(u){
+  if(st.q&&!u.c.toLowerCase().includes(st.q.toLowerCase()))return false;
+  if(st.type&&u.type!==st.type)return false;
+  const p=(st.net?u.net:u.price)/1e6;
+  if(st.pmin!=null&&p<st.pmin)return false;
+  if(st.pmax!=null&&p>st.pmax)return false;
+  if(st.onlyAv&&!u.avail)return false;
+  return true;
+}
+function mk(tag,at,parent){const e=document.createElementNS(NS,tag);for(const a in at)e.setAttribute(a,at[a]);if(parent)parent.appendChild(e);return e}
+function render(){
+  ov.innerHTML='';
+  const list=byFloor[st.floor]||[];
+  const filtered=!!(st.q||st.type||st.pmin!=null||st.pmax!=null||st.onlyAv);
+  list.forEach(u=>{
+    const c=cls(u),[x,y,w,h]=u.r,hide=st.present&&!u.avail;
+    const g=mk('g',{class:'u '+(u.avail?'av ':'s ')+(st.sel===u.c?'sel ':'')+(filtered&&!match(u)?'dim':''),'data-c':u.c},ov);
+    if(!u.avail){
+      mk('rect',{class:'shade',x,y,width:w,height:h},g);
+      const col=COL[c],m=Math.min(w,h)*.1;
+      mk('line',{class:'x',x1:x+m,y1:y+m,x2:x+w-m,y2:y+h-m,stroke:col,'stroke-width':Math.max(7,Math.min(w,h)*.09),opacity:.95},g);
+      mk('line',{class:'x',x1:x+w-m,y1:y+m,x2:x+m,y2:y+h-m,stroke:col,'stroke-width':Math.max(7,Math.min(w,h)*.09),opacity:.95},g);
+    }
+    mk('rect',{class:'hit',x,y,width:w,height:h},g);
+    // price pill near unit number
+    if(!(hide)){
+      const txt=M(st.net?u.net:u.price),fs=21,pw=txt.length*13.2+14,ph=32;
+      const cx=Math.min(Math.max(u.x,x+pw/2+2),x+w-pw/2-2),cy=Math.min(Math.max(u.y,y+ph/2+2),y+h-ph/2-2);
+      const p=mk('g',{class:'pill',transform:`translate(${cx},${cy})`,'pointer-events':'none'},g);
+      mk('rect',{x:-pw/2,y:-ph/2,width:pw,height:ph,rx:7,fill:u.avail?'#0c7a4b':'#3a4256',stroke:'#fff','stroke-width':2,opacity:u.avail?.97:.9},p);
+      const t=mk('text',{fill:'#fff','font-size':fs,'text-decoration':u.avail?'none':'line-through'},p);t.textContent=txt;
+    }
+  });
+  // stats
+  const av=list.filter(u=>u.avail),sold=list.filter(u=>!u.avail);
+  const ps=av.map(u=>u.price);
+  $('#stats').innerHTML=`<span>ทั้งหมด <b>${list.length}</b></span><span class="g">ว่าง <b>${av.length}</b></span><span class="r">ไม่ว่าง/ขายแล้ว <b>${sold.length}</b></span>`+(ps.length?`<span>ราคาห้องว่าง <b>${M(Math.min(...ps))}–${M(Math.max(...ps))}</b></span>`:'');
+}
+ov.addEventListener('click',e=>{if(moved>5)return;const g=e.target.closest('.u');if(g)select(g.dataset.c)});
+// ---------- state changes
+function setFloor(f,keepView){
+  st.floor=f;st.sel=null;closeDrawer();
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',+b.dataset.f===f));
+  img.src=`img/floor-${f}.jpg`;
+  buildBChips();render();
+  if(!keepView){st.tower?zoomTower():fitAll()}
+  history.replaceState(null,'','#f='+f);
+}
+function towersOn(f){return TOWERS.filter(t=>(byFloor[f]||[]).some(u=>u.t===t))}
+function buildBChips(){
+  const c=$('#bchips');c.innerHTML='';
+  const mkc=(t,l)=>{const b=document.createElement('button');b.className='chip'+(st.tower===t?' on':'');b.textContent=l;b.onclick=()=>setTower(t);c.appendChild(b)};
+  mkc('','ทั้งชั้น');towersOn(st.floor).forEach(t=>mkc(t,t));
+}
+function zoomTower(){
+  const L=(byFloor[st.floor]||[]).filter(u=>u.t===st.tower);if(!L.length){fitAll();return}
+  let x0=1e9,y0=1e9,x1=0,y1=0;L.forEach(u=>{const[x,y,w,h]=u.r;x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x+w);y1=Math.max(y1,y+h)});
+  fitRect(x0-60,y0-90,x1-x0+120,y1-y0+150,20);
+}
+function setTower(t){st.tower=t;buildBChips();t?zoomTower():fitAll()}
+var select=function(c){
+  const u=(byFloor[st.floor]||[]).find(v=>v.c===c);if(!u)return;
+  st.sel=c;
+  ov.querySelectorAll('.u.sel').forEach(g=>g.classList.remove('sel'));
+  const g=ov.querySelector(`.u[data-c="${c}"]`);if(g){g.classList.add('sel');ov.appendChild(g)}
+  openDrawer(u);
+  history.replaceState(null,'',`#f=${st.floor}&u=${c}`);
+};
+function openDrawer(u){
+  const d=$('#drawer'),c=cls(u);
+  const bcls={ok:'b-ok',sold:'b-sold',pend:'b-pend',lock:'b-lock'}[c];
+  const sqm=u.area?u.price/u.area:0,netsqm=u.area?u.net/u.area:0;
+  let html=`<div class="dhead"><button class="close" onclick="document.getElementById('drawer').classList.add('hide')">✕</button>
+   <div class="code">${u.c}</div><div class="sub">อาคาร ${u.t} · ชั้น ${u.f} · ${u.type}</div>
+   <span class="badge ${bcls}">${u.avail?'แปลงว่าง'+(u.lto?' · Lease to Own':''):(st.present?'ไม่ว่าง':'ไม่ว่าง · '+u.status)}</span></div>
+   <div class="sec"><div class="grid">
+    <div class="kv"><span>พื้นที่ขาย (ตร.ม.)</span><b>${u.area??'-'}</b></div>
+    <div class="kv"><span>ทิศ</span><b>${u.dir||'-'}</b></div>
+    <div class="kv"><span>วิว</span><b>${u.view==='ใน'?'วิวภายในโครงการ':u.view==='นอก'?'วิวภายนอก':(u.view||'-')}</b></div>
+    <div class="kv"><span>ราคา/ตร.ม.</span><b>${sqm?fmt(sqm):'-'}</b></div>
+   </div></div>`;
+  html+=`<div class="sec"><div class="bigprice"><span>ราคาขาย (ก่อนหักส่วนลด)</span><b>${fmt(u.price)} บาท</b><small>≈ ${M(u.price)}</small></div>
+   <div style="height:12px"></div><h4>ส่วนลดและโปรโมชั่น</h4>`;
+  const rows=[['PRO1 · Cash Back',u.p1,'ส่วนลดเงินสด'],['PRO2 · Win-Win (ผู้แนะนำ)',u.p2,'ลูกค้าเดิมแนะนำ'],['PRO2-1 · Win-Win (ผู้ซื้อใหม่)',u.p21,'ลูกค้าใหม่ที่ได้รับการแนะนำ'],['PRO3 · On Hand',u.p3,'สิทธิ์ On Hand']];
+  rows.forEach(r=>html+=`<div class="row"><div>${r[0]}<em>${r[2]}</em></div><b>${r[1]?'− '+fmt(r[1]):'-'}</b></div>`);
+  html+=`<div class="row tot"><div>รวมส่วนลด</div><b>− ${fmt(u.total)}</b></div></div>`;
+  html+=`<div class="sec" style="border:0"><div class="net"><span>ราคาสุทธิ (หักทุกโปร #1–3)</span><b>${fmt(u.net)} บาท</b><small>≈ ${M(u.net)}${netsqm?' · '+fmt(netsqm)+' บาท/ตร.ม.':''}</small></div>`;
+  if(u.pro4)html+=`<div class="free"><b>PRO4 · ${u.pro4.toUpperCase()}</b>${u.free?`<br>มูลค่า ${fmt(u.free)} บาท`:''}</div>`;
+  if(u.event)html+=`<div class="xnote">${u.event}${u.evdate?' · Event Date '+dateTH(u.evdate):''}</div>`;
+  html+=`</div>`;
+  if(!st.present)html+=`<div class="sec tag-internal"><h4>ข้อมูลภายใน</h4><div class="grid">
+    <div class="kv"><span>Unit Status</span><b>${u.status||'-'}</b></div>
+    <div class="kv"><span>Open Sales</span><b>${u.open||'-'}</b></div>
+    <div class="kv" style="grid-column:1/3"><span>Unit Detail</span><b>${u.detail||'-'}</b></div></div></div>`;
+  html+=`<div class="btns"><button class="btn" id="copyBtn">คัดลอกข้อมูลห้อง</button><button class="btn alt" id="zoomBtn">ซูมไปที่ห้อง</button></div>`;
+  d.innerHTML=html;d.classList.remove('hide');d.scrollTop=0;
+  $('#copyBtn').onclick=()=>{
+    const t=`KAVALON ห้อง ${u.c} (อาคาร ${u.t} ชั้น ${u.f})\nแบบ ${u.type} · ${u.area} ตร.ม. · ทิศ${u.dir}\nราคาขาย ${fmt(u.price)} บาท\n`+
+      (u.p1?`Cash Back ${fmt(u.p1)}\n`:'')+(u.p2?`Win-Win ผู้แนะนำ ${fmt(u.p2)}\n`:'')+(u.p21?`Win-Win ผู้ซื้อใหม่ ${fmt(u.p21)}\n`:'')+(u.p3?`On Hand ${fmt(u.p3)}\n`:'')+
+      `ราคาสุทธิหลังหักโปร ${fmt(u.net)} บาท`+(u.pro4?`\n+ ${u.pro4}${u.free?' มูลค่า '+fmt(u.free)+' บาท':''}`:'');
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('คัดลอกแล้ว'),()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();toast('คัดลอกแล้ว')});
+  };
+  $('#zoomBtn').onclick=()=>{const[x,y,w,h]=u.r;const m=Math.max(w,h)*1.8;fitRect(x+w/2-m*1.3,y+h/2-m,m*2.6,m*2,20)};
+  setTimeout(()=>{const[x,y,w,h]=u.r;const vw=view.clientWidth,vh=view.clientHeight;const dw=window.innerWidth>820?400:0;
+    const sx=tx+(x+w/2)*k,sy=ty+(y+h/2)*k;
+    const vh2=window.innerWidth>820?vh:vh-d.offsetHeight;if(sx<60||sy<60||sx>vw-60||sy>vh2-60){stage.style.transition='transform .3s';setTimeout(()=>stage.style.transition='',320);tx+= vw/2-sx;ty+=vh2/2-sy;apply()}},0);
+}
+function closeDrawer(){$('#drawer').classList.add('hide');st.sel=null}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1400)}
+// ---------- controls
+$('#q').oninput=e=>{st.q=e.target.value.trim();render();
+  if(/^[A-Ia-i]\d{3,4}$/.test(st.q)){let c=st.q.toUpperCase();if(c.length===4)c=c[0]+'0'+c.slice(1);const u=D.units.find(v=>v.c===c);if(u){if(u.f!==st.floor)setFloor(u.f,true);setTimeout(()=>{select(c);const[x,y,w,h]=u.r;const m=Math.max(w,h)*1.8;fitRect(x+w/2-m*1.3,y+h/2-m,m*2.6,m*2,20)},60)}}};
+typeSel.onchange=e=>{st.type=e.target.value;render()};
+$('#pmin').oninput=e=>{st.pmin=e.target.value===''?null:+e.target.value;render()};
+$('#pmax').oninput=e=>{st.pmax=e.target.value===''?null:+e.target.value;render()};
+$('#onlyAv').onchange=e=>{st.onlyAv=e.target.checked;render()};
+$('#showNet').onchange=e=>{st.net=e.target.checked;render();if(st.sel){const u=D.units.find(v=>v.c===st.sel)}};
+$('#presentBtn').onclick=e=>{st.present=!st.present;document.body.classList.toggle('present',st.present);e.target.classList.toggle('on',st.present);render();if(st.sel)openDrawer(D.units.find(v=>v.c===st.sel))};
+$('#filtBtn').onclick=()=>{document.querySelector('.bar2').classList.toggle('open');setTimeout(()=>{if(!st.tower)fitAll()},50)};
+$('#fsBtn').onclick=()=>{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()};
+document.addEventListener('keydown',e=>{if(/INPUT|SELECT/.test(e.target.tagName))return;
+  if(e.key>='1'&&e.key<='8')setFloor(+e.key);else if(e.key==='Escape')closeDrawer(),render();else if(e.key==='+'||e.key==='=')$('#zin').click();else if(e.key==='-')$('#zout').click();});
+// ---------- edit mode
+if(EDIT){$('#editbar').style.display='block';
+ const svgPt=e=>{const r=view.getBoundingClientRect();return[(e.clientX-r.left-tx)/k,(e.clientY-r.top-ty)/k]};
+ const saveFix=u=>{LS[u.f+':'+u.c]=u.r.map(v=>Math.round(v*10)/10);try{localStorage.setItem('kav_fix',JSON.stringify(LS))}catch(e){}};
+ let ed=null;
+ function drawEdit(){ov.querySelectorAll('.edit').forEach(n=>n.remove());if(!st.sel)return;
+  const u=(byFloor[st.floor]||[]).find(v=>v.c===st.sel);if(!u)return;const[x,y,w,h]=u.r;
+  const g=mk('g',{class:'edit'},ov);
+  const body=mk('rect',{x,y,width:w,height:h,fill:'rgba(255,210,74,.12)',stroke:'#ffd24a','stroke-width':5,cursor:'move'},g);
+  const hs=Math.max(18,14/k);
+  const hA=mk('rect',{x:x-hs/2,y:y-hs/2,width:hs,height:hs,fill:'#ffd24a',cursor:'nwse-resize'},g);
+  const hB=mk('rect',{x:x+w-hs/2,y:y+h-hs/2,width:hs,height:hs,fill:'#ffd24a',cursor:'nwse-resize'},g);
+  const start=(mode)=>e=>{e.stopPropagation();e.preventDefault();ed={mode,p:svgPt(e),r:u.r.slice()};e.target.setPointerCapture(e.pointerId)};
+  body.addEventListener('pointerdown',start('move'));hA.addEventListener('pointerdown',start('nw'));hB.addEventListener('pointerdown',start('se'));
+  [body,hA,hB].forEach(n=>{n.addEventListener('pointermove',e=>{if(!ed)return;e.stopPropagation();const p=svgPt(e),dx=p[0]-ed.p[0],dy=p[1]-ed.p[1];let[a,b,c,d]=ed.r;
+    if(ed.mode==='move'){a+=dx;b+=dy}else if(ed.mode==='nw'){a+=dx;b+=dy;c-=dx;d-=dy}else{c+=dx;d+=dy}
+    if(c<20||d<20)return;u.r=[a,b,c,d];render();drawEdit()});
+   n.addEventListener('pointerup',e=>{if(ed){e.stopPropagation();saveFix(u);ed=null}})});
+ }
+ const _sel=select;select=function(c){_sel(c);setTimeout(drawEdit,0)};
+ $('#exFix').onclick=()=>{const t=JSON.stringify(Object.assign({},window.KAV_FIX||{},LS));navigator.clipboard.writeText('window.KAV_FIX='+t+';').then(()=>toast('คัดลอกแล้ว นำไปวางใน fixes.js'))};
+ $('#rsFix').onclick=()=>{if(!st.sel)return;const key=st.floor+':'+st.sel;delete LS[key];try{localStorage.setItem('kav_fix',JSON.stringify(LS))}catch(e){};location.reload()};
+}
+// ---------- init
+const hm=/f=(\d)(?:&u=([A-I]\d{4}))?/.exec(location.hash);
+const f0=hm?+hm[1]:1;
+img.onload=()=>{};
+setFloor(f0);
+if(hm&&hm[2]){const u=D.units.find(v=>v.c===hm[2]);if(u)setTimeout(()=>{select(u.c);const[x,y,w,h]=u.r;const m=Math.max(w,h)*1.8;fitRect(x+w/2-m*1.3,y+h/2-m,m*2.6,m*2,20,false)},50)}
+})();
+</script>
+</body>
+</html>
