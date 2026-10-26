@@ -276,7 +276,7 @@ function openDrawer(u){
    <div class="code">${u.c}</div><div class="sub">อาคาร ${u.t} · ชั้น ${u.f} · ${u.type}</div>
    <span class="badge ${bcls}">${u.avail?'แปลงว่าง'+(u.lto?' · Lease to Own':''):(st.present?'ไม่ว่าง':'ไม่ว่าง · '+u.status)}</span></div>
    <div class="sec"><div class="grid">
-    <div class="kv"><span>พื้นที่ขาย (ตร.ม.)</span><b>${u.area??'-'}</b></div>
+    <div class="kv"><span>พื้นที่โฉนด (ตร.ม.)</span><b>${u.area??'-'}</b></div>
     <div class="kv"><span>ทิศ</span><b>${u.dir||'-'}</b></div>
     <div class="kv"><span>วิว</span><b>${u.view==='ใน'?'วิวภายในโครงการ':u.view==='นอก'?'วิวภายนอก':(u.view||'-')}</b></div>
     <div class="kv"><span>ราคา/ตร.ม.</span><b>${sqm?fmt(sqm):'-'}</b></div>
