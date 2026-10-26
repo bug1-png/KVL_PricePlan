@@ -41,25 +41,39 @@ if (fs.existsSync(deedFile)) {
   console.log('ไม่พบ ' + DEED_FILE + ' (ข้ามพื้นที่โฉนด)');
 }
 
-const rows = readSheet(priceFile, PRICE_SHEET).slice(2).filter(r => /^[A-I]\d{4}$/.test(r[2] || ''));
+const all = readSheet(priceFile, PRICE_SHEET);
+const norm = v => String(v == null ? '' : v).replace(/\s+/g, '');
+const hdr = all[1].map(norm);
+const col = (name, starts) => { const n = norm(name); const i = hdr.findIndex(h => starts ? h.startsWith(n) : h === n); if (i < 0) { console.error('ไม่พบคอลัมน์ "' + name + '" ในแถวหัวตาราง (แถวที่ 2)'); process.exit(1); } return i; };
+const C = {
+  open: col('OPEN SALES'), code: col('เลขที่แปลง'), rc: hdr.indexOf('รหัสห้อง'), type: col('TYPE'), dir: col('ทิศ'),
+  area: col('พ.ท.', true), view: col('วิว'), status: col('Unit Status'), detail: col('Unit Detail'),
+  price: col('ราคาขาย', true), base: col('Base Price2'), var: col('Variance'),
+  p1: col('CashBack'), p2: col('WIN-WIN(ผู้แนะนำ)'), p21: col('WIN-WIN(ผู้ซื้อใหม่)'), p3: col('ON HAND'),
+  pro4: col('หมายเหตุ'), free: col('FREE ALL', true), event: col('Plan PM', true), evdate: col('EventDate')
+};
+if (C.rc < 0) console.log('! ไม่พบคอลัมน์ "รหัสห้อง" (ข้ามรหัสห้อง)');
+const rows = all.slice(2).filter(r => /^[A-I]\d{4}$/.test(r[C.code] || ''));
 const units = [], seen = new Set(), noGeo = [];
 for (const r of rows) {
-  const c = r[2];
+  const c = r[C.code];
   if (seen.has(c)) continue;      // แถวซ้ำท้ายตาราง ใช้แถวแรก
   seen.add(c);
   const g = geo.units[c];
   if (!g) { noGeo.push(c); continue; }
-  const total = num(r[16]) + num(r[17]) + num(r[18]) + num(r[19]);
-  let status = str(r[9]);
+  const total = num(r[C.p1]) + num(r[C.p2]) + num(r[C.p21]) + num(r[C.p3]);
+  let status = str(r[C.status]);
   if (/^sold$/i.test(status)) status = 'SOLD';   // sold / Sold / SOLD -> SOLD
+  const rcRaw = C.rc >= 0 ? r[C.rc] : null;
+  const rc = (str(rcRaw) === '' || /^0+$/.test(str(rcRaw))) ? '' : str(rcRaw);   // ว่าง/0 = ยังไม่รับรหัส
   const u = {
-    c, t: c[0], f: g.f, type: r[5], dir: r[6], area: numOrNull(r[7]), view: r[8], status,
+    c, rc, t: c[0], f: g.f, type: r[C.type], dir: r[C.dir], area: numOrNull(r[C.area]), view: r[C.view], status,
     avail: status.startsWith('แปลงว่าง'), lto: status.includes('Lease'),
-    detail: r[10], open: str(r[1]),
-    price: num(r[12]), base: num(r[13]), var: num(r[14]),
-    p1: num(r[16]), p2: num(r[17]), p21: num(r[18]), p3: num(r[19]),
-    total, net: num(r[12]) - total,
-    pro4: str(r[22]), free: num(r[23]), event: r[24], evdate: r[25],
+    detail: r[C.detail], open: str(r[C.open]),
+    price: num(r[C.price]), base: num(r[C.base]), var: num(r[C.var]),
+    p1: num(r[C.p1]), p2: num(r[C.p2]), p21: num(r[C.p21]), p3: num(r[C.p3]),
+    total, net: num(r[C.price]) - total,
+    pro4: str(r[C.pro4]), free: num(r[C.free]), event: r[C.event], evdate: r[C.evdate],
     x: g.x, y: g.y, r: g.r, ap: g.ap
   };
   if (deed[c] !== undefined) u.area = deed[c];
