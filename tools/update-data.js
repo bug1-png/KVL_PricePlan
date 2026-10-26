@@ -66,7 +66,7 @@ for (const r of rows) {
   units.push(u);
 }
 
-fs.writeFileSync(path.join(ROOT, 'data.js'), 'window.KAV=' + JSON.stringify({ w: geo.w, h: geo.h, units }) + ';');
+fs.writeFileSync(path.join(ROOT, 'data.js'), 'window.KAV=' + JSON.stringify({ w: geo.w, h: geo.h, updated: new Date().toISOString(), units }) + ';');
 
 const avail = units.filter(u => u.avail).length;
 console.log(`เสร็จแล้ว: ${units.length} ห้อง (ว่าง ${avail} / ไม่ว่าง ${units.length - avail})`);
