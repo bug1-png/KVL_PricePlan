@@ -65,6 +65,7 @@ input[type=text]{width:120px}input[type=number]{width:92px}
 .dhead .sub{color:var(--mute);font-size:13px;margin-top:4px}
 .close{position:absolute;right:12px;top:12px;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--panel2)}
 .badge{display:inline-block;padding:3px 11px;border-radius:999px;font-size:12px;font-weight:600;margin-top:8px}
+.udetail{color:var(--mute)}.udhl{color:#ffd24a;font-weight:600}
 .b-code{background:rgba(63,109,240,.2);color:#9db8ff;margin-right:4px}.b-nocode{background:rgba(154,168,199,.16);color:var(--mute)}
 .b-ok{background:rgba(25,179,107,.18);color:#4be09b}.b-sold{background:rgba(229,72,77,.2);color:#ff8a8d}.b-lock{background:rgba(138,148,168,.22);color:#c4cbda}.b-pend{background:rgba(240,160,32,.2);color:#ffc460}
 .sec{padding:14px 18px;border-bottom:1px solid var(--line)}
@@ -277,7 +278,7 @@ function openDrawer(u){
   const bcls={ok:'b-ok',sold:'b-sold',pend:'b-pend',lock:'b-lock'}[c];
   const sqm=u.area?u.price/u.area:0,netsqm=u.area?u.net/u.area:0;
   let html=`<div class="dhead"><button class="close" onclick="document.getElementById('drawer').classList.add('hide')">✕</button>
-   <div class="code">${u.c}</div><div class="sub">อาคาร ${u.t} · ชั้น ${u.f} · ${u.type}</div>
+   <div class="code">${u.c}</div><div class="sub">อาคาร ${u.t} · ชั้น ${u.f} · ${u.type}${(!st.present&&u.detail)?` · <span class="udetail ${/^standard$/i.test(String(u.detail).trim())?'':'udhl'}">${u.detail}</span>`:''}</div>
    <span class="badge b-code ${u.rc?'':'b-nocode'}">รหัสห้อง ${u.rc?u.rc:'ยังไม่รับรหัส'}</span> <span class="badge ${bcls}">${u.avail?'แปลงว่าง'+(u.lto?' · Lease to Own':''):(st.present?'ไม่ว่าง':'ไม่ว่าง · '+u.status)}</span></div>
    <div class="sec"><div class="grid">
     <div class="kv"><span>พื้นที่โฉนด (ตร.ม.)</span><b>${u.area??'-'}</b></div>
@@ -297,7 +298,7 @@ function openDrawer(u){
   if(!st.present)html+=`<div class="sec tag-internal"><h4>ข้อมูลภายใน</h4><div class="grid">
     <div class="kv"><span>Unit Status</span><b>${u.status||'-'}</b></div>
     <div class="kv"><span>Open Sales</span><b>${u.open||'-'}</b></div>
-    <div class="kv" style="grid-column:1/3"><span>Unit Detail</span><b>${u.detail||'-'}</b></div></div></div>`;
+    </div></div>`;
   html+=`<div class="btns"><button class="btn" id="copyBtn">คัดลอกข้อมูลห้อง</button><button class="btn alt" id="zoomBtn">ซูมไปที่ห้อง</button></div>`;
   d.innerHTML=html;d.classList.remove('hide');d.scrollTop=0;
   $('#copyBtn').onclick=()=>{
