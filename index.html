@@ -66,6 +66,7 @@ input[type=text]{width:120px}input[type=number]{width:92px}
 .close{position:absolute;right:12px;top:12px;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--panel2)}
 .badge{display:inline-block;padding:3px 11px;border-radius:999px;font-size:12px;font-weight:600;margin-top:8px}
 .udetail{color:var(--mute)}.udhl{color:#ffd24a;font-weight:600}
+.h4eye{display:flex;justify-content:space-between;align-items:center}.eye{background:var(--panel2);border:1px solid var(--line);color:var(--mute);border-radius:50%;width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;padding:0}.eye:hover,.eye.on{color:#fff;border-color:var(--brand);background:#243a78}.hiddennote{color:var(--mute);font-size:12px;padding-top:10px}
 .b-code{background:rgba(63,109,240,.2);color:#9db8ff;margin-right:4px}.b-nocode{background:rgba(154,168,199,.16);color:var(--mute)}
 .b-ok{background:rgba(25,179,107,.18);color:#4be09b}.b-sold{background:rgba(229,72,77,.2);color:#ff8a8d}.b-lock{background:rgba(138,148,168,.22);color:#c4cbda}.b-pend{background:rgba(240,160,32,.2);color:#ffc460}
 .sec{padding:14px 18px;border-bottom:1px solid var(--line)}
@@ -126,7 +127,7 @@ body.present .tag-internal{display:none}
     <span class="lab">ราคา (ล้าน)</span>
     <input type="number" id="pmin" placeholder="ต่ำสุด" step="0.1" min="0"><span class="lab">–</span><input type="number" id="pmax" placeholder="สูงสุด" step="0.1" min="0">
     <label class="tog"><input type="checkbox" id="onlyAv"> เฉพาะห้องว่าง</label>
-    <label class="tog"><input type="checkbox" id="showNet"> แสดงราคาสุทธิหลังหักโปร</label>
+    <label class="tog nopresent"><input type="checkbox" id="showNet"> แสดงราคาสุทธิหลังหักโปร</label>
   </div>
   <div id="main">
     <div id="view">
@@ -273,8 +274,12 @@ var select=function(c){
   openDrawer(u);
   history.replaceState(null,'',`#f=${st.floor}&u=${c}`);
 };
+let showAll=false,lastShown=null;
+const EYE_ON='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_OFF='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
 function openDrawer(u){
-  const d=$('#drawer'),c=cls(u);
+  const d=$('#drawer');if(lastShown!==u.c||d.classList.contains('hide')){showAll=false;lastShown=u.c}
+  const _d=$('#drawer'),c=cls(u);
   const bcls={ok:'b-ok',sold:'b-sold',pend:'b-pend',lock:'b-lock'}[c];
   const sqm=u.area?u.price/u.area:0,netsqm=u.area?u.net/u.area:0;
   let html=`<div class="dhead"><button class="close" onclick="document.getElementById('drawer').classList.add('hide')">✕</button>
@@ -287,24 +292,33 @@ function openDrawer(u){
     <div class="kv"><span>ราคา/ตร.ม.</span><b>${sqm?fmt(sqm):'-'}</b></div>
    </div></div>`;
   html+=`<div class="sec"><div class="bigprice"><span>ราคาขาย (ก่อนหักส่วนลด)</span><b>${fmt(u.price)} บาท</b><small>≈ ${M(u.price)}</small></div>
-   <div style="height:12px"></div><h4>ส่วนลดและโปรโมชั่น</h4>`;
+   <div style="height:12px"></div><h4 class="h4eye"><span>ส่วนลดและโปรโมชั่น</span><button class="eye ${showAll?'on':''}" id="eyeBtn" title="${showAll?'ซ่อนส่วนลดอื่นๆ':'แสดงส่วนลดอื่นๆ'}" aria-label="แสดง/ซ่อนส่วนลดอื่นๆ">${showAll?EYE_OFF:EYE_ON}</button></h4>`;
   const rows=[['PRO1 · Cash Back',u.p1,'ส่วนลดเงินสด'],['PRO2 · Win-Win (ผู้แนะนำ)',u.p2,'ลูกค้าเดิมแนะนำ'],['PRO2-1 · Win-Win (ผู้ซื้อใหม่)',u.p21,'ลูกค้าใหม่ที่ได้รับการแนะนำ'],['PRO3 · On Hand',u.p3,'สิทธิ์ On Hand']];
-  rows.forEach(r=>html+=`<div class="row"><div>${r[0]}<em>${r[2]}</em></div><b>${r[1]?'− '+fmt(r[1]):'-'}</b></div>`);
-  html+=`<div class="row tot"><div>รวมส่วนลด</div><b>− ${fmt(u.total)}</b></div></div>`;
+  const shown=showAll?rows:rows.slice(0,1);
+  shown.forEach(r=>html+=`<div class="row"><div>${r[0]}<em>${r[2]}</em></div><b>${r[1]?'− '+fmt(r[1]):'-'}</b></div>`);
+  if(showAll)html+=`<div class="row tot"><div>รวมส่วนลด</div><b>− ${fmt(u.total)}</b></div></div>`;
+  else html+=`<div class="hiddennote">ส่วนลดอื่นๆ และราคาสุทธิ ซ่อนอยู่ · กดรูปดวงตาเพื่อแสดง</div></div>`;
+  if(showAll){
   html+=`<div class="sec" style="border:0"><div class="net"><span>ราคาสุทธิ (หักทุกโปร #1–3)</span><b>${fmt(u.net)} บาท</b><small>≈ ${M(u.net)}${netsqm?' · '+fmt(netsqm)+' บาท/ตร.ม.':''}</small></div>`;
   if(u.pro4)html+=`<div class="free"><b>PRO4 · ${u.pro4.toUpperCase()}</b>${u.free?`<br>มูลค่า ${fmt(u.free)} บาท`:''}</div>`;
   if(u.event)html+=`<div class="xnote">${u.event}${u.evdate?' · Event Date '+dateTH(u.evdate):''}</div>`;
   html+=`</div>`;
+  }
   if(!st.present)html+=`<div class="sec tag-internal"><h4>ข้อมูลภายใน</h4><div class="grid">
     <div class="kv"><span>Unit Status</span><b>${u.status||'-'}</b></div>
     <div class="kv"><span>Open Sales</span><b>${u.open||'-'}</b></div>
     </div></div>`;
   html+=`<div class="btns"><button class="btn" id="copyBtn">คัดลอกข้อมูลห้อง</button><button class="btn alt" id="zoomBtn">ซูมไปที่ห้อง</button></div>`;
   d.innerHTML=html;d.classList.remove('hide');d.scrollTop=0;
+  $('#eyeBtn').onclick=()=>{showAll=!showAll;const sc=d.scrollTop;openDrawer(u);d.scrollTop=sc};
   $('#copyBtn').onclick=()=>{
     const t=`KAVALON ห้อง ${u.c} (รหัสห้อง ${u.rc||'ยังไม่รับรหัส'}) อาคาร ${u.t} ชั้น ${u.f}\nแบบ ${u.type} · ${u.area} ตร.ม. · ทิศ${u.dir}\nราคาขาย ${fmt(u.price)} บาท\n`+
-      (u.p1?`Cash Back ${fmt(u.p1)}\n`:'')+(u.p2?`Win-Win ผู้แนะนำ ${fmt(u.p2)}\n`:'')+(u.p21?`Win-Win ผู้ซื้อใหม่ ${fmt(u.p21)}\n`:'')+(u.p3?`On Hand ${fmt(u.p3)}\n`:'')+
-      `ราคาสุทธิหลังหักโปร ${fmt(u.net)} บาท`+(u.pro4?`\n+ ${u.pro4}${u.free?' มูลค่า '+fmt(u.free)+' บาท':''}`:'');
+      (u.p1?`Cash Back ${fmt(u.p1)}
+`:'')+(showAll?((u.p2?`Win-Win ผู้แนะนำ ${fmt(u.p2)}
+`:'')+(u.p21?`Win-Win ผู้ซื้อใหม่ ${fmt(u.p21)}
+`:'')+(u.p3?`On Hand ${fmt(u.p3)}
+`:'')+`ราคาสุทธิหลังหักโปร ${fmt(u.net)} บาท`+(u.pro4?`
++ ${u.pro4}${u.free?' มูลค่า '+fmt(u.free)+' บาท':''}`:'')):'').replace(/\n$/,'');
     (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('คัดลอกแล้ว'),()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();toast('คัดลอกแล้ว')});
   };
   $('#zoomBtn').onclick=()=>{const[x,y,w,h]=u.r;const m=Math.max(w,h)*1.8;fitRect(x+w/2-m*1.3,y+h/2-m,m*2.6,m*2,20)};
