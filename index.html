@@ -149,8 +149,9 @@ body.present .tag-internal{display:none}
   </div>
 </div>
 <div id="toast"></div>
-<script src="data.js"></script>
-<script src="fixes.js"></script>
+<script>/* กัน browser จำไฟล์ข้อมูลเก่า: ใส่เลขเวลาต่อท้ายทุกครั้งที่เปิด */
+(function(){var v=Date.now(),t='scr'+'ipt';['data.js','fixes.js'].forEach(function(f){document.write('<'+t+' src="'+f+'?v='+v+'"></'+t+'>')})})();
+</script>
 <script>
 (function(){
 const D=window.KAV, W=D.w, H=D.h;
